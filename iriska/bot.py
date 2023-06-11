@@ -1,4 +1,5 @@
 from hikari import Intents, Member
+from hikari.events import *
 
 from dotenv import load_dotenv
 import os
@@ -55,7 +56,7 @@ points = PointsManager()
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL_UNPRIVILEGED)
+bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL)
 
 
 @bot.command
@@ -81,18 +82,19 @@ async def zapytaj(ctx: lightbulb.Context) -> None:
 async def dobranoc(ctx: lightbulb.Context) -> None:
     guild = ctx.get_guild()
     if guild is None:
-        return await ctx.get_channel().send("Nie jesteś na serwerze")
+        return await ctx.respond("Nie jesteś na serwerze")
     members = guild.get_members()
     if members is None:
-        return await ctx.get_channel().send("Nie ma nikogo na serwerze")
+        return await ctx.respond("Nie ma nikogo na serwerze")
     members = list(filter(lambda x: x, members))
     favorite = members[random.choice(range(0, members.__len__()))]
     favorite = guild.get_member(favorite)
-    await ctx.get_channel().send(
+    await ctx.respond(
         "Dobranoc kochani, życzę wam słodkich snów, a w szczególności mojemu kochanemu " + favorite.__str__() + ":heart:")
 
 
 @bot.command
+@lightbulb.option("kto", "kto pytał", Member, required=False)
 @lightbulb.command("trivia", "so trivial", ephemeral=False)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def trivia(ctx: lightbulb.Context) -> None:
@@ -101,8 +103,15 @@ async def trivia(ctx: lightbulb.Context) -> None:
                        572512848270327849, 235351337179545611, 218333108825489408, 362284256053035008,
                        503534440006549525, 226403255842766849, 379260996126244874, 383635450306232320,
                        285146237613899776]
-    favorite = ctx.get_guild().get_member(random.choice(siedemnascie_ce))
+    favorite: Member = ctx.get_guild().get_member(random.choice(siedemnascie_ce))
+
+    if ctx.options['kto']:
+        favorite: Member = ctx.options['kto']
+
     second_favorite = ctx.get_guild().get_member(random.choice(siedemnascie_ce))
+
+    if ctx.options['kto']:
+        second_favorite: Member = ctx.options['kto']
 
     trivias = [f"Czy wiedzieliście, że {favorite.mention} jest najlepszym programistą w swojej grupie?",
                f"Czy wiedzieliście, że {favorite.mention} miał w gimnazjum przezwisko 'Kicia'?",
@@ -156,7 +165,7 @@ async def trivia(ctx: lightbulb.Context) -> None:
                f"Nie ma trivii. Nie zasługujesz na trivię, {ctx.author.mention}.",
                f"Czy wiedzieliście, że {favorite.mention} dzisiaj obudził się obok {second_favorite.mention}?"
                ]
-    await ctx.get_channel().send(random.choice(trivias))
+    await ctx.respond(random.choice(trivias))
 
 
 @bot.command
@@ -164,7 +173,7 @@ async def trivia(ctx: lightbulb.Context) -> None:
 @lightbulb.implements(lightbulb.SlashCommand)
 async def siad(ctx: lightbulb.Context) -> None:
     choices = random.choice(["*stoi dalej*", "*siada*", "*macha ogonkiem*", "*siada, bo cię kocha*"])
-    await ctx.get_channel().send(choices)
+    await ctx.respond(choices)
 
 
 @bot.command
@@ -174,10 +183,10 @@ async def leżeć(ctx: lightbulb.Context) -> None:
     choices = random.choice(
         ["*stoi dalej*", "*leży*", "*macha ogonkiem*", "*leży, bo cię kocha*", "*ucieka*", "*umiera*"])
     if choices == "*umiera*":
-        await ctx.get_channel().send(choices)
-        await ctx.get_channel().send("F")
+        await ctx.respond(choices)
+        await ctx.respond("F")
         exit()
-    await ctx.get_channel().send(choices)
+    await ctx.respond(choices)
 
 
 @bot.command
@@ -187,7 +196,7 @@ async def łapa(ctx: lightbulb.Context) -> None:
     choices = random.choice(
         ["*stoi dalej*", "*daje łapkę*", "*macha ogonkiem*", "*daje łapkę, bo cię kocha*", "*kładzie się na brzuszek*",
          "*daje główkę*", "*daje nóżkę*"])
-    await ctx.get_channel().send(choices)
+    await ctx.respond(choices)
 
 
 @bot.command
@@ -198,13 +207,13 @@ async def smaczek(ctx: lightbulb.Context) -> None:
         ["*ignoruje*", "*smakuje smaczka*", "*macha ogonkiem*", "*smakuje smaczka, bo cię kocha*", "*nie smakuje jej*",
          "*smakuje jej*"])
     if choices == "*nie smakuje jej*":
-        await ctx.get_channel().send(choices)
+        await ctx.respond(choices)
         await points.update_points(str(ctx.author.id), -1)
         # assign_points(ctx.author, -1)
     elif choices == "*ignoruje*":
-        await ctx.get_channel().send(choices)
+        await ctx.respond(choices)
     else:
-        await ctx.get_channel().send(choices)
+        await ctx.respond(choices)
         await points.update_points(str(ctx.author.id), 1)
         await points.update_points(str(ctx.author.id), 1)
 
@@ -226,7 +235,7 @@ async def spacer(ctx: lightbulb.Context) -> None:
         "Poszliście do ciemnego tunelu między Śródmieściem a Powiślem. wtf? - -3 punkty": -3,
     }
     miejsce = random.choice(list(miejsca.keys()))
-    await ctx.get_channel().send(miejsce)
+    await ctx.respond(miejsce)
     await points.update_points(str(ctx.author.id), miejsca[miejsce])
     # assign_points(ctx.author, miejsca[miejsce])
 
@@ -251,6 +260,19 @@ async def bully(ctx: lightbulb.Context):
         await who_to_bully.send(ctx.options['co'])
 
     await ctx.respond("Bullyizuje " + who_to_bully.mention + "!")
+
+
+@bot.listen(GuildMessageCreateEvent)
+async def listen_for_messages(event: GuildMessageCreateEvent) -> None:
+    print(event.message.content)
+    if event.message.author.is_bot:
+        return
+    choice = random.choice(range(0, 10000))
+    answers = random.choice(
+        ["Ta?", "Nie interesuje mnie to.", "Ok, i?", "Aha", "Ok", "Nie", "Tak", "Znajdź Boga.", "Przemsań",
+         "It's time to stop"])
+    if choice == 1:
+        await event.message.respond(answers, reply=True)
 
 
 @bot.listen(lightbulb.events.LightbulbStartedEvent)
