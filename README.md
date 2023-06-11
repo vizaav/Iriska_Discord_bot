@@ -4,14 +4,25 @@ This code implements a Discord bot using the `lightbulb` library. The bot respon
 
 ## Setup
 
-Before running the bot, make sure you have installed the required dependencies:
+1. Ensure you have installed [poetry](https://python-poetry.org/docs/#installation) and python 3.10 (or newer)
 
-- `discord.app_commands`
-- `hikari`
-- `lightbulb`
-- `dotenv`
+2. Install dependencies
+    ```
+    poetry install
+    ```
 
-To install the dependencies, you can use the following command:
+3. Create `.env` file and fill following variables:
+   - `DISCORD_TOKEN` - Discord bot token
 
-```shell
-pip install discord.app_commands hikari lightbulb python-dotenv
+## Run
+
+```
+python -O -m iriska
+```
+
+## Related documentation
+
+ - [lightbulb](https://hikari-lightbulb.readthedocs.io/en/latest/index.html)
+ - [hikari](https://docs.hikari-py.dev/en/latest/)
+ - [discord api](https://discord.com/developers/docs/intro)
+ - [poetry](https://python-poetry.org/docs/)

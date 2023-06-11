@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "iriska-discord-bot"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "iriska_discord_bot"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+hikari = {extras = ["speedups"], version = "^2.0.0.dev120"}
+hikari-lightbulb = "^2.3.3"
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
