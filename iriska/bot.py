@@ -1,107 +1,82 @@
-from hikari import Intents, GuildVoiceChannel, channels, guilds, snowflakes, Event, Member, Guild, Embed, Status
+from hikari import Intents, Member
 
 from dotenv import load_dotenv
 import os
 import random
 import lightbulb
-import csv
 
+from iriska.points import PointsManager
 
-def assign_points(user, points):
-    lines = []
+points = PointsManager()
 
-    # Read existing data from the file
-    with open("points.csv", "r") as file:
-        reader = csv.reader(file)
-        lines = list(reader)
-
-    found = False
-    for line in lines:
-        if line[0] == str(user):
-            line[1] = str(int(line[1]) + points)
-            found = True
-            break
-
-    # Write updated data to the file
-    with open("points.csv", "w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(lines)
-
-        # If the user was not found, add a new row
-        if not found:
-            writer.writerow([user, points])
-
-
-def get_points(user):
-    file = open("points.csv", "r")
-    reader = csv.reader(file)
-    lines = list(reader)
-    file.close()
-    for line in lines:
-        print("line: " + line.__str__())
-        if lines.__len__() == 0:
-            return 0
-        if line.__str__() == "":
-            continue
-        elif line[0] == user.__str__():
-            points = line[1].__str__()
-            user_login = line[0].__str__()
-            return "Człowiek " + user_login + " ma " + points + " punkty miłości Iriski :heart:"
-    return 0
+# def assign_points(user, points):
+#     lines = []
+#
+#     # Read existing data from the file
+#     with open("points.csv", "r") as file:
+#         reader = csv.reader(file)
+#         lines = list(reader)
+#
+#     found = False
+#     for line in lines:
+#         if line[0] == str(user):
+#             line[1] = str(int(line[1]) + points)
+#             found = True
+#             break
+#
+#     # Write updated data to the file
+#     with open("points.csv", "w", newline='') as file:
+#         writer = csv.writer(file)
+#         writer.writerows(lines)
+#
+#         # If the user was not found, add a new row
+#         if not found:
+#             writer.writerow([user, points])
+#
+#
+# def get_points(user):
+#     file = open("points.csv", "r")
+#     reader = csv.reader(file)
+#     lines = list(reader)
+#     file.close()
+#     for line in lines:
+#         print("line: " + line.__str__())
+#         if lines.__len__() == 0:
+#             return 0
+#         if line.__str__() == "":
+#             continue
+#         elif line[0] == user.__str__():
+#             points = line[1].__str__()
+#             user_login = line[0].__str__()
+#             return "Człowiek " + user_login + " ma " + points + " punkty miłości Iriski :heart:"
+#     return 0
 
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-bot = lightbulb.BotApp(token=DISCORD_TOKEN, prefix="=", intents=Intents.ALL)
-
-
-# Register the command to the bot
-@bot.command
-# Use the command decorator to convert the function into a command
-@lightbulb.command("ping", "checks the bot is alive")
-# Define the command type(s) that this command implements
-@lightbulb.implements(lightbulb.PrefixCommand)
-# Define the command's callback. The callback should take a single argument which will be
-# an instance of a subclass of lightbulb.Context when passed in
-@lightbulb.implements(lightbulb.SlashCommand)
-async def ping(ctx: lightbulb.Context) -> None:
-    # Send a message to the channel the command was used in
-    await ctx.respond("Pong!")
+bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL_UNPRIVILEGED)
 
 
 @bot.command
-@lightbulb.command("witaj", "says hello")
-@lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
-async def hello(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send("Dzień dobry wszystkim! :heart:")
-
-
-@bot.command
-@lightbulb.command("bully", "bully")
-@lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
-async def bully(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send("$contact hello")
-
-
-@bot.command
-@lightbulb.command("8", "zapytaj")
-@lightbulb.implements(lightbulb.PrefixCommand)
+@lightbulb.option("pytanie", "Pytanie do Iriski")
+@lightbulb.command("8", "zapytaj", ephemeral=False)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def zapytaj(ctx: lightbulb.Context) -> None:
+    if ctx.options['pytanie'] is None or ctx.options['pytanie'].endswith("?") is False:
+        await ctx.respond("To nie jest pytanie *sus*")
+
     responses = ["Zdecydowanie tak", "Nie mam żadnych wątpliwości", "Nigdy w to nie wątpiłam", "Jest to pewne", "Tak",
                  "Tak - zdecydowanie", "Nie licz na to", "Moja odpowiedź brzmi nie", "Moje źródła mówią nie",
                  "Absolutnie nie", "Absolutnie tak", "Jak mogłeś w to wątpić?",
                  "Czemu zadajesz takie oczywiste pytania? Oczywiście, że tak!",
                  "Twoja stara"]
-    await ctx.get_channel().send(random.choice(responses))
+
+    await ctx.respond(random.choice(responses))
 
 
 @bot.command
 @lightbulb.command("dobranoc", "papa")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def dobranoc(ctx: lightbulb.Context) -> None:
     guild = ctx.get_guild()
@@ -118,8 +93,7 @@ async def dobranoc(ctx: lightbulb.Context) -> None:
 
 
 @bot.command
-@lightbulb.command("trivia", "so trivial")
-@lightbulb.implements(lightbulb.PrefixCommand)
+@lightbulb.command("trivia", "so trivial", ephemeral=False)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def trivia(ctx: lightbulb.Context) -> None:
     siedemnascie_ce = [307598226184339457, 615940700730687502, 433215903539396609, 517050226570297346,
@@ -187,7 +161,6 @@ async def trivia(ctx: lightbulb.Context) -> None:
 
 @bot.command
 @lightbulb.command("siad", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def siad(ctx: lightbulb.Context) -> None:
     choices = random.choice(["*stoi dalej*", "*siada*", "*macha ogonkiem*", "*siada, bo cię kocha*"])
@@ -196,7 +169,6 @@ async def siad(ctx: lightbulb.Context) -> None:
 
 @bot.command
 @lightbulb.command("leżeć", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def leżeć(ctx: lightbulb.Context) -> None:
     choices = random.choice(
@@ -210,7 +182,6 @@ async def leżeć(ctx: lightbulb.Context) -> None:
 
 @bot.command
 @lightbulb.command("łapa", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def łapa(ctx: lightbulb.Context) -> None:
     choices = random.choice(
@@ -221,7 +192,6 @@ async def łapa(ctx: lightbulb.Context) -> None:
 
 @bot.command
 @lightbulb.command("smaczek", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def smaczek(ctx: lightbulb.Context) -> None:
     choices = random.choice(
@@ -229,17 +199,18 @@ async def smaczek(ctx: lightbulb.Context) -> None:
          "*smakuje jej*"])
     if choices == "*nie smakuje jej*":
         await ctx.get_channel().send(choices)
-        assign_points(ctx.author, -1)
+        await points.update_points(str(ctx.author.id), -1)
+        # assign_points(ctx.author, -1)
     elif choices == "*ignoruje*":
         await ctx.get_channel().send(choices)
     else:
         await ctx.get_channel().send(choices)
-        assign_points(ctx.author, 1)
+        await points.update_points(str(ctx.author.id), 1)
+        await points.update_points(str(ctx.author.id), 1)
 
 
 @bot.command
 @lightbulb.command("spacer", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def spacer(ctx: lightbulb.Context) -> None:
     miejsca = {
@@ -256,61 +227,32 @@ async def spacer(ctx: lightbulb.Context) -> None:
     }
     miejsce = random.choice(list(miejsca.keys()))
     await ctx.get_channel().send(miejsce)
-    assign_points(ctx.author, miejsca[miejsce])
+    await points.update_points(str(ctx.author.id), miejsca[miejsce])
+    # assign_points(ctx.author, miejsca[miejsce])
 
 
 @bot.command
 @lightbulb.command("punkty", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def punkty(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send(get_points(ctx.author))
-
-
-
-
-@bot.command
-@lightbulb.command("bullyiza", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
-async def bullyiza(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send("Bullyizuje " + ctx.get_guild().get_member(615940700730687502).mention + "!")
-    await ctx.get_guild().get_member(615940700730687502).send(
-        "Bullyizuje " + ctx.get_guild().get_member(615940700730687502).__str__() + "!")
+    await ctx.respond(points.get_points(str(ctx.author.id)))
 
 
 @bot.command
-@lightbulb.command("bullycyprian", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
+@lightbulb.option("kto", "kto pytał", Member)
+@lightbulb.option("co", "chcesz coś dodać od siebie??/", required=False)
+@lightbulb.command("bully", "bully someone", ephemeral=False)
 @lightbulb.implements(lightbulb.SlashCommand)
-async def bullycyprian(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send("Bullycyprianuję " + ctx.get_guild().get_member(307598226184339457).mention + "!")
-    await ctx.get_guild().get_member(307598226184339457).send(
-        "Bullycyprianuję " + ctx.get_guild().get_member(307598226184339457).__str__() + "!")
+async def bully(ctx: lightbulb.Context):
+    who_to_bully: Member = ctx.options['kto']
+    await who_to_bully.send(f'Zostałeś zbullyizowany przez {ctx.author.mention}!')
+
+    if ctx.options['co']:
+        await who_to_bully.send(ctx.options['co'])
+
+    await ctx.respond("Bullyizuje " + who_to_bully.mention + "!")
 
 
-@bot.command
-@lightbulb.command("bullykrystian", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
-async def bully(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send("Bullykrystianuję " + ctx.get_guild().get_member(285146237613899776).mention + "!")
-    await ctx.get_guild().get_member(285146237613899776).send(
-        "Bullykrystianuję " + ctx.get_guild().get_member(285146237613899776).__str__() + "!")
-
-
-@bot.command
-@lightbulb.command("bullydede", "help")
-@lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
-async def bully(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send("Bullydeduję " + ctx.get_guild().get_member(517050226570297346).mention + "!")
-    await ctx.get_guild().get_member(517050226570297346).send(
-        "Bullydeduję " + ctx.get_guild().get_member(517050226570297346).__str__() + "!")
-
-
-# Run the bot
-# Note that this is blocking meaning no code after this line will run
-# until the bot is shut off
-if __name__ == '__main__':
-    bot.run()
+@bot.listen(lightbulb.events.LightbulbStartedEvent)
+async def bot_started(event: lightbulb.events.LightbulbStartedEvent) -> None:
+    await points.sync()

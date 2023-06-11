@@ -11,6 +11,7 @@ python = ">=3.10,<3.12"
 hikari = {extras = ["speedups"], version = "^2.0.0.dev120"}
 hikari-lightbulb = "^2.3.3"
 python-dotenv = "^1.0.0"
+aiofiles = "^23.1.0"
 
 [build-system]
 requires = ["poetry-core"]

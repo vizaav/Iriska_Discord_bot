@@ -1,4 +1,4 @@
-from iriska.iriska import bot
+from iriska.bot import bot
 
 if __name__ == '__main__':
     bot.run()
