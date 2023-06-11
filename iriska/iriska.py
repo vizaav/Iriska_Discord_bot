@@ -1,6 +1,3 @@
-import discord
-import hikari.channels
-from discord.app_commands import AppCommand
 from hikari import Intents, GuildVoiceChannel, channels, guilds, snowflakes, Event, Member, Guild, Embed, Status
 
 from dotenv import load_dotenv
