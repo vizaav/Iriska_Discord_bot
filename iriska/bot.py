@@ -5,55 +5,59 @@ import os
 import random
 import lightbulb
 import csv
+import asyncio
 
+from iriska.points import PointsManager
 
-def assign_points(user, points):
-    lines = []
+points = PointsManager()
 
-    # Read existing data from the file
-    with open("points.csv", "r") as file:
-        reader = csv.reader(file)
-        lines = list(reader)
-
-    found = False
-    for line in lines:
-        if line[0] == str(user):
-            line[1] = str(int(line[1]) + points)
-            found = True
-            break
-
-    # Write updated data to the file
-    with open("points.csv", "w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(lines)
-
-        # If the user was not found, add a new row
-        if not found:
-            writer.writerow([user, points])
-
-
-def get_points(user):
-    file = open("points.csv", "r")
-    reader = csv.reader(file)
-    lines = list(reader)
-    file.close()
-    for line in lines:
-        print("line: " + line.__str__())
-        if lines.__len__() == 0:
-            return 0
-        if line.__str__() == "":
-            continue
-        elif line[0] == user.__str__():
-            points = line[1].__str__()
-            user_login = line[0].__str__()
-            return "Człowiek " + user_login + " ma " + points + " punkty miłości Iriski :heart:"
-    return 0
+# def assign_points(user, points):
+#     lines = []
+#
+#     # Read existing data from the file
+#     with open("points.csv", "r") as file:
+#         reader = csv.reader(file)
+#         lines = list(reader)
+#
+#     found = False
+#     for line in lines:
+#         if line[0] == str(user):
+#             line[1] = str(int(line[1]) + points)
+#             found = True
+#             break
+#
+#     # Write updated data to the file
+#     with open("points.csv", "w", newline='') as file:
+#         writer = csv.writer(file)
+#         writer.writerows(lines)
+#
+#         # If the user was not found, add a new row
+#         if not found:
+#             writer.writerow([user, points])
+#
+#
+# def get_points(user):
+#     file = open("points.csv", "r")
+#     reader = csv.reader(file)
+#     lines = list(reader)
+#     file.close()
+#     for line in lines:
+#         print("line: " + line.__str__())
+#         if lines.__len__() == 0:
+#             return 0
+#         if line.__str__() == "":
+#             continue
+#         elif line[0] == user.__str__():
+#             points = line[1].__str__()
+#             user_login = line[0].__str__()
+#             return "Człowiek " + user_login + " ma " + points + " punkty miłości Iriski :heart:"
+#     return 0
 
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-bot = lightbulb.BotApp(token=DISCORD_TOKEN, prefix="=", intents=Intents.ALL)
+bot = lightbulb.BotApp(token=DISCORD_TOKEN, prefix="&", intents=Intents.ALL)
 
 
 # Register the command to the bot
@@ -222,25 +226,27 @@ async def łapa(ctx: lightbulb.Context) -> None:
 @bot.command
 @lightbulb.command("smaczek", "help")
 @lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
+# @lightbulb.implements(lightbulb.SlashCommand)
 async def smaczek(ctx: lightbulb.Context) -> None:
     choices = random.choice(
         ["*ignoruje*", "*smakuje smaczka*", "*macha ogonkiem*", "*smakuje smaczka, bo cię kocha*", "*nie smakuje jej*",
          "*smakuje jej*"])
     if choices == "*nie smakuje jej*":
         await ctx.get_channel().send(choices)
-        assign_points(ctx.author, -1)
+        await points.update_points(ctx.author.id, -1)
+        # assign_points(ctx.author, -1)
     elif choices == "*ignoruje*":
         await ctx.get_channel().send(choices)
     else:
         await ctx.get_channel().send(choices)
-        assign_points(ctx.author, 1)
+        await points.update_points(ctx.author.id, 1)
+        await points.update_points(ctx.author.id, 1)
 
 
 @bot.command
 @lightbulb.command("spacer", "help")
 @lightbulb.implements(lightbulb.PrefixCommand)
-@lightbulb.implements(lightbulb.SlashCommand)
+# @lightbulb.implements(lightbulb.SlashCommand)
 async def spacer(ctx: lightbulb.Context) -> None:
     miejsca = {
         "Poszliście do parku. Iriska jest zachwycona! - 3 punkty": 3,
@@ -256,7 +262,8 @@ async def spacer(ctx: lightbulb.Context) -> None:
     }
     miejsce = random.choice(list(miejsca.keys()))
     await ctx.get_channel().send(miejsce)
-    assign_points(ctx.author, miejsca[miejsce])
+    await points.update_points(str(ctx.author.id), miejsca[miejsce])
+    # assign_points(ctx.author, miejsca[miejsce])
 
 
 @bot.command
@@ -264,9 +271,7 @@ async def spacer(ctx: lightbulb.Context) -> None:
 @lightbulb.implements(lightbulb.PrefixCommand)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def punkty(ctx: lightbulb.Context) -> None:
-    await ctx.get_channel().send(get_points(ctx.author))
-
-
+    await ctx.get_channel().send(points.get_points(str(ctx.author.id)))
 
 
 @bot.command
@@ -309,8 +314,7 @@ async def bully(ctx: lightbulb.Context) -> None:
         "Bullydeduję " + ctx.get_guild().get_member(517050226570297346).__str__() + "!")
 
 
-# Run the bot
-# Note that this is blocking meaning no code after this line will run
-# until the bot is shut off
-if __name__ == '__main__':
-    bot.run()
+@bot.listen(lightbulb.events.LightbulbStartedEvent)
+async def bot_started(event: lightbulb.events.LightbulbStartedEvent) -> None:
+    await points.sync()
+    print(points.points)
