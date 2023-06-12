@@ -1,10 +1,11 @@
-from hikari import Intents, Member
+from hikari import Intents, Member, Message
 from hikari.events import *
 
 from dotenv import load_dotenv
 import os
 import random
 import lightbulb
+from lightbulb import MessageContext
 
 from iriska.points import PointsManager
 
@@ -39,11 +40,16 @@ async def zapytaj(ctx: lightbulb.Context) -> None:
 @lightbulb.implements(lightbulb.SlashCommand)
 async def dobranoc(ctx: lightbulb.Context) -> None:
     guild = ctx.get_guild()
+
     if guild is None:
-        return await ctx.respond("Nie jesteś na serwerze")
+        await ctx.respond("Nie jesteś na serwerze")
+        return
+
     members = guild.get_members()
     if members is None:
-        return await ctx.respond("Nie ma nikogo na serwerze")
+        await ctx.respond("Nie ma nikogo na serwerze")
+        return
+
     members = list(filter(lambda x: x, members))
     favorite = members[random.choice(range(0, members.__len__()))]
     favorite = guild.get_member(favorite)
@@ -220,15 +226,28 @@ async def bully(ctx: lightbulb.Context):
     await ctx.respond("Bullyizuje " + who_to_bully.mention + "!")
 
 
+@bot.command
+@lightbulb.command("bully", "bully creator of this message", ephemeral=True)
+@lightbulb.implements(lightbulb.MessageCommand)
+async def bullying_is_based(ctx: MessageContext):
+    answer = random.choice(
+        ["Ta?", "Nie interesuje mnie to.", "Ok, i?", "Aha", "Ok", "Nie", "Tak", "Znajdź Boga.", "Przemsań",
+         "It's time to stop"])
+    message: Message = ctx.options.target
+    await ctx.respond("Jesteś zły.")
+    await message.respond(answer, reply=True)
+
+
 @bot.listen(GuildMessageCreateEvent)
 async def listen_for_messages(event: GuildMessageCreateEvent) -> None:
-    print(event.message.content)
     if event.message.author.is_bot:
         return
+
     choice = random.choice(range(0, 10000))
     answers = random.choice(
         ["Ta?", "Nie interesuje mnie to.", "Ok, i?", "Aha", "Ok", "Nie", "Tak", "Znajdź Boga.", "Przemsań",
          "It's time to stop"])
+
     if choice == 1:
         await event.message.respond(answers, reply=True)
 
