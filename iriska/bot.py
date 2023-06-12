@@ -10,53 +10,11 @@ from iriska.points import PointsManager
 
 points = PointsManager()
 
-# def assign_points(user, points):
-#     lines = []
-#
-#     # Read existing data from the file
-#     with open("points.csv", "r") as file:
-#         reader = csv.reader(file)
-#         lines = list(reader)
-#
-#     found = False
-#     for line in lines:
-#         if line[0] == str(user):
-#             line[1] = str(int(line[1]) + points)
-#             found = True
-#             break
-#
-#     # Write updated data to the file
-#     with open("points.csv", "w", newline='') as file:
-#         writer = csv.writer(file)
-#         writer.writerows(lines)
-#
-#         # If the user was not found, add a new row
-#         if not found:
-#             writer.writerow([user, points])
-#
-#
-# def get_points(user):
-#     file = open("points.csv", "r")
-#     reader = csv.reader(file)
-#     lines = list(reader)
-#     file.close()
-#     for line in lines:
-#         print("line: " + line.__str__())
-#         if lines.__len__() == 0:
-#             return 0
-#         if line.__str__() == "":
-#             continue
-#         elif line[0] == user.__str__():
-#             points = line[1].__str__()
-#             user_login = line[0].__str__()
-#             return "Człowiek " + user_login + " ma " + points + " punkty miłości Iriski :heart:"
-#     return 0
-
-
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_GUILDS = tuple(map(lambda x: x.strip(), os.getenv("DISCORD_GUILDS").split(",")))
 
-bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL)
+bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL, default_enabled_guilds=DISCORD_GUILDS)
 
 
 @bot.command
