@@ -1,62 +1,21 @@
-from hikari import Intents, Member
+from hikari import Intents, Member, Message
 from hikari.events import *
 
 from dotenv import load_dotenv
 import os
 import random
 import lightbulb
+from lightbulb import MessageContext
 
 from iriska.points import PointsManager
 
 points = PointsManager()
 
-# def assign_points(user, points):
-#     lines = []
-#
-#     # Read existing data from the file
-#     with open("points.csv", "r") as file:
-#         reader = csv.reader(file)
-#         lines = list(reader)
-#
-#     found = False
-#     for line in lines:
-#         if line[0] == str(user):
-#             line[1] = str(int(line[1]) + points)
-#             found = True
-#             break
-#
-#     # Write updated data to the file
-#     with open("points.csv", "w", newline='') as file:
-#         writer = csv.writer(file)
-#         writer.writerows(lines)
-#
-#         # If the user was not found, add a new row
-#         if not found:
-#             writer.writerow([user, points])
-#
-#
-# def get_points(user):
-#     file = open("points.csv", "r")
-#     reader = csv.reader(file)
-#     lines = list(reader)
-#     file.close()
-#     for line in lines:
-#         print("line: " + line.__str__())
-#         if lines.__len__() == 0:
-#             return 0
-#         if line.__str__() == "":
-#             continue
-#         elif line[0] == user.__str__():
-#             points = line[1].__str__()
-#             user_login = line[0].__str__()
-#             return "Człowiek " + user_login + " ma " + points + " punkty miłości Iriski :heart:"
-#     return 0
-
-
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_GUILDS = tuple(map(lambda x: x.strip(), os.getenv("DISCORD_GUILDS").split(",")))
 
-bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL)
+bot = lightbulb.BotApp(token=DISCORD_TOKEN, intents=Intents.ALL, default_enabled_guilds=DISCORD_GUILDS)
 
 
 @bot.command
@@ -81,11 +40,16 @@ async def zapytaj(ctx: lightbulb.Context) -> None:
 @lightbulb.implements(lightbulb.SlashCommand)
 async def dobranoc(ctx: lightbulb.Context) -> None:
     guild = ctx.get_guild()
+
     if guild is None:
-        return await ctx.respond("Nie jesteś na serwerze")
+        await ctx.respond("Nie jesteś na serwerze")
+        return
+
     members = guild.get_members()
     if members is None:
-        return await ctx.respond("Nie ma nikogo na serwerze")
+        await ctx.respond("Nie ma nikogo na serwerze")
+        return
+
     members = list(filter(lambda x: x, members))
     favorite = members[random.choice(range(0, members.__len__()))]
     favorite = guild.get_member(favorite)
@@ -262,15 +226,28 @@ async def bully(ctx: lightbulb.Context):
     await ctx.respond("Bullyizuje " + who_to_bully.mention + "!")
 
 
+@bot.command
+@lightbulb.command("bully", "bully creator of this message", ephemeral=True)
+@lightbulb.implements(lightbulb.MessageCommand)
+async def bullying_is_based(ctx: MessageContext):
+    answer = random.choice(
+        ["Ta?", "Nie interesuje mnie to.", "Ok, i?", "Aha", "Ok", "Nie", "Tak", "Znajdź Boga.", "Przemsań",
+         "It's time to stop"])
+    message: Message = ctx.options.target
+    await ctx.respond("Jesteś zły.")
+    await message.respond(answer, reply=True)
+
+
 @bot.listen(GuildMessageCreateEvent)
 async def listen_for_messages(event: GuildMessageCreateEvent) -> None:
-    print(event.message.content)
     if event.message.author.is_bot:
         return
+
     choice = random.choice(range(0, 10000))
     answers = random.choice(
         ["Ta?", "Nie interesuje mnie to.", "Ok, i?", "Aha", "Ok", "Nie", "Tak", "Znajdź Boga.", "Przemsań",
          "It's time to stop"])
+
     if choice == 1:
         await event.message.respond(answers, reply=True)
 
