@@ -268,3 +268,7 @@ async def leaugue_started(event: hikari.PresenceUpdateEvent) -> None:
             user = await event.fetch_user()
             await user.send('Błagam, wyłącz tą ligę...')
             break
+        elif activity.name == 'Heartstone':
+            user = await event.fetch_user()
+            await user.send('Znowu ten hs?')
+            break
