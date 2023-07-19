@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import hikari
 from hikari import Intents, Member, Message
 from hikari.events import *
@@ -258,6 +260,9 @@ async def bot_started(event: lightbulb.events.LightbulbStartedEvent) -> None:
     await points.sync()
 
 
+cooldowns = {}
+
+
 @bot.listen(hikari.PresenceUpdateEvent)
 async def leaugue_started(event: hikari.PresenceUpdateEvent) -> None:
     for activity in event.presence.activities:
@@ -265,10 +270,22 @@ async def leaugue_started(event: hikari.PresenceUpdateEvent) -> None:
             continue
 
         if activity.name == 'League of Legends':
+            if event.user_id in cooldowns:
+                if datetime.now() < cooldowns[event.user_id]:
+                    break
             user = await event.fetch_user()
-            await user.send('Błagam, wyłącz tą ligę...')
-            break
+            await user.send('Błagam cię, wyłącz tą ligę!')
+            cooldowns[event.user_id] = datetime.now() + timedelta(minutes=5)
+
         elif activity.name == 'Heartstone':
+
+            if event.user_id in cooldowns:
+
+                if datetime.now() < cooldowns[event.user_id]:
+                    break
+
             user = await event.fetch_user()
-            await user.send('Znowu ten hs?')
-            break
+
+            await user.send('Znowu hs?!')
+
+            cooldowns[event.user_id] = datetime.now() + timedelta(minutes=5)
