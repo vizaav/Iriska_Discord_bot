@@ -1,3 +1,4 @@
+import hikari
 from hikari import Intents, Member, Message
 from hikari.events import *
 
@@ -255,3 +256,15 @@ async def listen_for_messages(event: GuildMessageCreateEvent) -> None:
 @bot.listen(lightbulb.events.LightbulbStartedEvent)
 async def bot_started(event: lightbulb.events.LightbulbStartedEvent) -> None:
     await points.sync()
+
+
+@bot.listen(hikari.PresenceUpdateEvent)
+async def leaugue_started(event: hikari.PresenceUpdateEvent) -> None:
+    for activity in event.presence.activities:
+        if activity.type != hikari.ActivityType.PLAYING:
+            continue
+
+        if activity.name == 'League of Legends':
+            user = await event.fetch_user()
+            await user.send('Błagam, wyłącz tą ligę...')
+            break
